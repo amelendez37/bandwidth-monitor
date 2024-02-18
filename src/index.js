@@ -34,3 +34,10 @@ child.stdout.on("data", (data) => {
   console.log("download: ", download);
   console.log("upload: ", upload);
 });
+
+process.on("SIGINT", () => {
+  // we're successfully capturing the exit. We can display in terminal here
+  console.log("we exiting");
+
+  process.exit(0);
+});
