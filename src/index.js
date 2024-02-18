@@ -18,12 +18,11 @@ function getIsDownload(packet) {
 }
 
 function getLength(packet) {
-  const lenAsString = packet.split("length")[1];
-  return +lenAsString;
+  const lenAsString = packet.split("length")[1].trim();
+  return parseInt(lenAsString);
 }
 
 child.stdout.on("data", (data) => {
-  console.log(data.toString());
   const tcpdumpOutput = data.toString();
 
   if (getIsDownload(tcpdumpOutput)) {
@@ -31,6 +30,7 @@ child.stdout.on("data", (data) => {
   } else {
     upload += getLength(tcpdumpOutput);
   }
+  // we are now summing download and upload. Look for a way to save this and show it on the console
+  console.log("download: ", download);
+  console.log("upload: ", upload);
 });
-
-// on exit of process show totalled upload and download
