@@ -1,19 +1,14 @@
-// using child-process module spawn function to spin up process to execute tcpdump command
-// process can run `sudo tcpdump -i en0 'tcp or udp'`
-// see if upload/download can be displayed in real time?
-// parse out lengh value from command output and add up.
-// upload data = when source ip is my machine
-// download data = when source ip is from ip other than mine
-// display
-// sudo visudo, remove last line
-
 const { spawn } = require("child_process");
-// no longer throwing error, but no output
-const child = spawn("sudo", ["tcpdump", "-i", "en0", "tcp", "or", "udp"]);
+
+const child = spawn("sudo", ["tcpdump", "-i", "any", "tcp", "or", "udp"]);
+
 let upload = 0;
 let download = 0;
 
 function getIsDownload(packet) {
+  console.log(packet);
+  // todo: this is wrong. Checking for aarons-mbp isn't working
+  // 2603-8000-ca00-9379-6d74-a7c1-8752-d9ae.res6.spectrum.com.60934, see if terminal command can be used to ping for IPv6 address
   return packet.split(">")[1].includes("aarons-mbp");
 }
 
@@ -24,20 +19,20 @@ function getLength(packet) {
 
 child.stdout.on("data", (data) => {
   const tcpdumpOutput = data.toString();
-
-  if (getIsDownload(tcpdumpOutput)) {
-    download += getLength(tcpdumpOutput);
-  } else {
-    upload += getLength(tcpdumpOutput);
+  const len = getLength(tcpdumpOutput);
+  if (!len) {
+    return;
   }
-  // we are now summing download and upload. Look for a way to save this and show it on the console
-  console.log("download: ", download);
-  console.log("upload: ", upload);
+  if (getIsDownload(tcpdumpOutput)) {
+    download += len;
+  } else {
+    upload += len;
+  }
 });
 
 process.on("SIGINT", () => {
-  // we're successfully capturing the exit. We can display in terminal here
-  console.log("we exiting");
-
+  const oneMillion = 1000000;
+  console.log("download (megabits): ", Math.ceil((download * 8) / oneMillion));
+  console.log("upload: (megabits)", Math.ceil((upload * 8) / oneMillion));
   process.exit(0);
 });
