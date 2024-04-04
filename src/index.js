@@ -1,14 +1,26 @@
 const { spawn } = require("child_process");
 
-const child = spawn("sudo", ["tcpdump", "-i", "any", "tcp", "or", "udp"]);
+const tcpDumpProcess = spawn("sudo", [
+  "tcpdump",
+  "-i",
+  "en0",
+  "-n",
+  "tcp",
+  "or",
+  "udp",
+]);
+const icanhazipProcess = spawn("curl", ["-6", "icanhazip.com"]);
 
 let upload = 0;
 let download = 0;
+let ip;
 
 function getIsDownload(packet) {
-  console.log(packet);
-  // todo: this is wrong. Checking for aarons-mbp isn't working
-  // 2603-8000-ca00-9379-6d74-a7c1-8752-d9ae.res6.spectrum.com.60934, see if terminal command can be used to ping for IPv6 address
+  // console.log(packet);
+  // 1. need to spin up process that runs `curl -6 icanhazip.com` (done)
+  // 2. store the return value from above into a variable, this will be external ip receiving incoming packets (done)
+  // 3. use external ip to analyze packets
+  // can look to filter tcpdump traffic based on specific destination and source as well with src and dst argumens
   return packet.split(">")[1].includes("aarons-mbp");
 }
 
@@ -17,7 +29,15 @@ function getLength(packet) {
   return parseInt(lenAsString);
 }
 
-child.stdout.on("data", (data) => {
+icanhazipProcess.stdout.on("data", (data) => {
+  ip = data.toString();
+});
+
+tcpDumpProcess.stdout.on("data", (data) => {
+  if (!ip) {
+    return;
+  }
+
   const tcpdumpOutput = data.toString();
   const len = getLength(tcpdumpOutput);
   if (!len) {
