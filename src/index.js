@@ -1,5 +1,7 @@
 const { spawn } = require("child_process");
 
+const icanhazipProcess = spawn("curl", ["-6", "icanhazip.com"]);
+const ipconfigProcess = spawn("ipconfig", ["getifaddr", "en0"]);
 const tcpDumpProcess = spawn("sudo", [
   "tcpdump",
   "-i",
@@ -9,19 +11,20 @@ const tcpDumpProcess = spawn("sudo", [
   "or",
   "udp",
 ]);
-const icanhazipProcess = spawn("curl", ["-6", "icanhazip.com"]);
 
 let upload = 0;
 let download = 0;
+let exip;
 let ip;
 
-function getIsDownload(packet) {
+function getIsDownload(packet, [ips]) {
   // console.log(packet);
   // 1. need to spin up process that runs `curl -6 icanhazip.com` (done)
   // 2. store the return value from above into a variable, this will be external ip receiving incoming packets (done)
   // 3. use external ip to analyze packets
   // can look to filter tcpdump traffic based on specific destination and source as well with src and dst argumens
-  return packet.split(">")[1].includes("aarons-mbp");
+  console.log("!!!: ", packet.split(">")[1]);
+  return packet.split(">")[1].includes(externalIP);
 }
 
 function getLength(packet) {
@@ -30,11 +33,15 @@ function getLength(packet) {
 }
 
 icanhazipProcess.stdout.on("data", (data) => {
+  exip = data.toString();
+});
+
+ipconfigProcess.stdout.on("data", (data) => {
   ip = data.toString();
 });
 
 tcpDumpProcess.stdout.on("data", (data) => {
-  if (!ip) {
+  if (!exip || !ip) {
     return;
   }
 
@@ -43,9 +50,11 @@ tcpDumpProcess.stdout.on("data", (data) => {
   if (!len) {
     return;
   }
-  if (getIsDownload(tcpdumpOutput)) {
+  if (getIsDownload(tcpdumpOutput, [exip, ip])) {
+    console.log("download: ", len);
     download += len;
   } else {
+    console.log("upload: ", len);
     upload += len;
   }
 });
