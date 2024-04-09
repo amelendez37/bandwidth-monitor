@@ -17,14 +17,9 @@ let download = 0;
 let exip;
 let ip;
 
-function getIsDownload(packet, [ips]) {
-  // console.log(packet);
-  // 1. need to spin up process that runs `curl -6 icanhazip.com` (done)
-  // 2. store the return value from above into a variable, this will be external ip receiving incoming packets (done)
-  // 3. use external ip to analyze packets
-  // can look to filter tcpdump traffic based on specific destination and source as well with src and dst argumens
-  console.log("!!!: ", packet.split(">")[1]);
-  return packet.split(">")[1].includes(externalIP);
+function getIsDownload(packet, ips) {
+  const destinationIP = packet.match(/> (\w*:*)*/)[0].slice(2);
+  return ips.includes(destinationIP);
 }
 
 function getLength(packet) {
