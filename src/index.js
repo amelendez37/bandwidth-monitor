@@ -28,11 +28,11 @@ function getLength(packet) {
 }
 
 icanhazipProcess.stdout.on("data", (data) => {
-  exip = data.toString();
+  exip = data.toString().slice(0, -1);
 });
 
 ipconfigProcess.stdout.on("data", (data) => {
-  ip = data.toString();
+  ip = data.toString().slice(0, -1);
 });
 
 tcpDumpProcess.stdout.on("data", (data) => {
@@ -46,10 +46,10 @@ tcpDumpProcess.stdout.on("data", (data) => {
     return;
   }
   if (getIsDownload(tcpdumpOutput, [exip, ip])) {
-    console.log("download: ", len);
+    // console.log("download: ", len);
     download += len;
   } else {
-    console.log("upload: ", len);
+    // console.log("upload: ", len);
     upload += len;
   }
 });
