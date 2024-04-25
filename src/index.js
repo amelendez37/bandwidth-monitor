@@ -18,12 +18,15 @@ let exip;
 let ip;
 
 function getIsDownload(packet, ips) {
+  // number of megabits in a 10 min video was way too small. Take a look at the packets again and see if packets are coming in
+  // that aren't being picked up
   const destinationIP = packet.match(/> (\w*:*)*/)[0].slice(2);
   return ips.includes(destinationIP);
 }
 
 function getLength(packet) {
-  const lenAsString = packet.split("length")[1].trim();
+  if (!packet.includes("length")) return;
+  const lenAsString = packet.split("length")[1].trim(); // try using `match` call specifically for length instead. Getting too much with split
   return parseInt(lenAsString);
 }
 
